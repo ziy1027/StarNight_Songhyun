@@ -209,9 +209,7 @@ export async function getWeatherRange(
 
   let res: Response;
   try {
-    res = await fetch(`${BASE_URL}?${params}`, {
-      next: { revalidate: 3600 },
-    });
+    res = await fetch(`${BASE_URL}?${params}`);
   } catch {
     return new Map();
   }
