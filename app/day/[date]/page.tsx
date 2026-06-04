@@ -155,6 +155,12 @@ export default async function DayDetailPage({ params }: PageProps) {
   // 달 조도 % (0=삭, 100=망)
   const illuminationPct = Math.round(moon.illumination * 100);
 
+  // 이전/다음 날 계산
+  const fmt = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const prevDate = new Date(dateObj); prevDate.setDate(prevDate.getDate() - 1);
+  const nextDate = new Date(dateObj); nextDate.setDate(nextDate.getDate() + 1);
+
   // 전월 링크
   const backMonth = `/?month=${year}-${String(month).padStart(2, "0")}`;
 
@@ -187,6 +193,16 @@ export default async function DayDetailPage({ params }: PageProps) {
         {best && (
           <p className={styles.bestBadge}>⭐ 별보기 최적일</p>
         )}
+
+        {/* 이전/다음날 네비게이션 */}
+        <div className={styles.heroNav}>
+          <Link href={`/day/${fmt(prevDate)}`} className={styles.heroNavBtn}>
+            ‹ {prevDate.getMonth() + 1}월 {prevDate.getDate()}일
+          </Link>
+          <Link href={`/day/${fmt(nextDate)}`} className={styles.heroNavBtn}>
+            {nextDate.getMonth() + 1}월 {nextDate.getDate()}일 ›
+          </Link>
+        </div>
       </div>
 
       {/* 별 관측 지수 카드 */}

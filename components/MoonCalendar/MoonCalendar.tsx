@@ -335,21 +335,21 @@ function DayCell({ data }: { data: DayCellData }) {
         />
       </div>
 
-      {/* 별보기 최적일 (그믐) — 초록 글로우 점 */}
-      {isBest && isCurrentMonth && (
-        <span
-          className={styles.bestDot}
-          aria-label="별보기 최적일"
-          title="별보기 최적일 🌟"
-        />
-      )}
-
-      {/* 별 관측 지수 컬러 점 */}
-      {starScore && !isBest && (
+      {/* 날씨 있으면 → 합산 점수 dot (그믐 포함 모든 날) */}
+      {starScore && isCurrentMonth && (
         <span
           className={styles.scoreDot}
           data-grade={starScore.grade}
           title={`지수 ${starScore.score}점`}
+        />
+      )}
+
+      {/* 날씨 없는 그믐 → 초록 dot (천문학적 최적일만) */}
+      {!starScore && isBest && isCurrentMonth && (
+        <span
+          className={styles.bestDot}
+          aria-label="별보기 최적일"
+          title="별보기 최적일 🌟"
         />
       )}
     </Link>
