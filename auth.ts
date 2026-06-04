@@ -19,11 +19,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   // ── OAuth Providers ────────────────────────────────────
   providers: [
     Kakao({
-      clientId:     process.env.KAKAO_CLIENT_ID!,
+      clientId: process.env.KAKAO_CLIENT_ID!,
       clientSecret: process.env.KAKAO_CLIENT_SECRET!,
       authorization: {
+        url: "https://kauth.kakao.com/oauth/authorize",
         params: {
-          scope: "profile_nickname profile_image account_email",
+          scope: "profile_nickname profile_image",
         },
       },
     }),
@@ -43,22 +44,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
      * Supabase users 테이블에 upsert
      */
     async signIn({ user, account }) {
-      if (!user.id || !user.email || !account) return false;
+      if (!user.id || !account) return false;
 
       try {
         const supabase = createServerClient();
-        const { error } = await supabase
-          .from("users")
-          .upsert(
-            {
-              id:       user.id,
-              email:    user.email,
-              name:     user.name  ?? null,
-              image:    user.image ?? null,
-              provider: account.provider,      // 'kakao' | 'google'
-            },
-            { onConflict: "id" }               // id 충돌 시 update
-          );
+        const { error } = await supabase.from("users").upsert(
+          {
+            id: user.id,
+            email: user.email ?? null,
+            name: user.name ?? null,
+            image: user.image ?? null,
+            provider: account.provider, // 'kakao' | 'google'
+          },
+          { onConflict: "id" }, // id 충돌 시 update
+        );
 
         if (error) {
           console.error("[auth.ts] Supabase upsert 실패:", error.message);
@@ -98,6 +97,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   // ── 커스텀 페이지 ───────────────────────────────────────
   pages: {
-    signIn: "/login",   // 커스텀 로그인 페이지 (추후 구현 가능)
+    signIn: "/login", // 커스텀 로그인 페이지 (추후 구현 가능)
   },
 });
