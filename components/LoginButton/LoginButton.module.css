@@ -1,0 +1,147 @@
+/* ============================================================
+   components/LoginButton/LoginButton.module.css
+   로그인/로그아웃 버튼 스타일
+   ============================================================ */
+
+/* ── 헤더 로그인 링크 ── */
+.loginLink {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: rgba(255, 249, 226, 0.08);
+  border: 1px solid rgba(255, 249, 226, 0.2);
+  text-decoration: none;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.loginLink:hover {
+  background: rgba(255, 249, 226, 0.15);
+  border-color: rgba(255, 249, 226, 0.4);
+  text-decoration: none;
+}
+
+/* ── 버튼 래퍼 (로그인 페이지용 소셜 버튼) ── */
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+/* ── 공통 소셜 버튼 ── */
+.socialBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  font-family: var(--font-sans-kr);
+  cursor: pointer;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  white-space: nowrap;
+  text-decoration: none;
+  width: 100%;
+  border: none;
+}
+
+.socialBtn:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.socialBtn:active {
+  transform: translateY(0);
+}
+
+/* 카카오 */
+.kakaoBtn {
+  background: #FEE500;
+  color: #191919;
+}
+
+/* 구글 */
+.googleBtn {
+  background: #ffffff;
+  color: #3c4043;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 버튼 아이콘 */
+.icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* ── 로그인 상태: 프로필 ── */
+.profile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  border: 2px solid var(--color-border-accent);
+}
+
+.avatarFallback {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-card-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.userName {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logoutBtn {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.logoutBtn:hover {
+  border-color: var(--color-border-accent);
+  color: var(--color-text-primary);
+}
+
+/* ── 로딩 상태 ── */
+.loading {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-card);
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}

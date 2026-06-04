@@ -1,0 +1,226 @@
+/* ============================================================
+   styles/globals.css
+   전역 CSS 변수, 폰트 설정, 리셋
+   디자인 토큰은 여기에만 정의하고 컴포넌트는 var()로 참조
+   ============================================================ */
+
+/* Google Fonts: Cinzel (로고), Outfit (영문/숫자) */
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap");
+/* Pretendard (한국어) */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+
+/* ----------------------------------------------------------
+   CSS 변수 (디자인 토큰)
+   ---------------------------------------------------------- */
+:root {
+  /* --- 색상 팔레트 --- */
+  /* 배경: 딥 네이비 */
+  --color-bg-primary: #112138;
+  --color-bg-secondary: #0c1927;
+  --color-bg-card: #192d47;
+  --color-bg-card-hover: #1f3757;
+
+  /* 강조색: 따뜻한 크림/달빛 계열 */
+  --color-accent-moon: #f0c040;      /* 달 황금색 */
+  --color-accent-star: #FFF9E2;      /* 별빛 크림 */
+  --color-accent-glow: #d4b483;      /* 따뜻한 황금 글로우 */
+
+  /* 별 관측 지수 등급 색상 */
+  --color-score-excellent: #4ade80;  /* 최상 - 초록 */
+  --color-score-good: #86efac;       /* 좋음 - 연초록 */
+  --color-score-fair: #fbbf24;       /* 보통 - 노랑 */
+  --color-score-poor: #f97316;       /* 나쁨 - 주황 */
+  --color-score-bad: #f87171;        /* 최악 - 빨강 */
+
+  /* 텍스트 */
+  --color-text-primary: #FFF9E2;
+  --color-text-secondary: rgba(255, 249, 226, 0.65);
+  --color-text-muted: rgba(255, 249, 226, 0.35);
+  --color-text-accent: #FFF9E2;
+
+  /* 보더/구분선 */
+  --color-border: rgba(255, 249, 226, 0.08);
+  --color-border-accent: rgba(255, 249, 226, 0.2);
+
+  /* --- 타이포그래피 --- */
+  --font-sans-kr: "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans-en: "Outfit", sans-serif;
+  --font-logo: "Cinzel", serif;
+
+  --font-size-xs: 0.75rem;   /* 12px */
+  --font-size-sm: 0.875rem;  /* 14px */
+  --font-size-base: 1rem;    /* 16px */
+  --font-size-lg: 1.125rem;  /* 18px */
+  --font-size-xl: 1.25rem;   /* 20px */
+  --font-size-2xl: 1.5rem;   /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+  --font-size-4xl: 2.25rem;  /* 36px */
+
+  /* --- 간격 (spacing scale) --- */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+
+  /* --- 둥글기 (border-radius) --- */
+  --radius-sm: 0.375rem;  /* 6px */
+  --radius-md: 0.5rem;    /* 8px */
+  --radius-lg: 0.75rem;   /* 12px */
+  --radius-xl: 1rem;      /* 16px */
+  --radius-2xl: 1.25rem;  /* 20px */
+  --radius-full: 9999px;
+
+  /* --- 그림자 --- */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-glow-moon: 0 0 20px rgba(240, 192, 64, 0.3);
+  --shadow-glow-star: 0 0 20px rgba(255, 249, 226, 0.25);
+
+  /* --- 전환 (transition) --- */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+
+  /* --- 레이아웃 --- */
+  --max-width-calendar: 900px;
+  --header-height: 56px;
+  --bottom-nav-height: 60px;
+}
+
+/* ----------------------------------------------------------
+   CSS 리셋 (Modern CSS Reset 기반)
+   ---------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans-kr);
+  font-size: var(--font-size-base);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
+
+  /* 부드러운 폰트 렌더링 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* 딥 네이비 + 따뜻한 별빛 그라디언트 */
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(255, 249, 226, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(240, 192, 64, 0.04) 0%, transparent 40%);
+  min-height: 100vh;
+}
+
+/* 숫자: Outfit 폰트 사용 (더 깔끔한 수치 표현) */
+.font-en,
+[data-font="en"] {
+  font-family: var(--font-sans-en);
+}
+
+/* ----------------------------------------------------------
+   유틸리티 클래스 (최소한만 정의)
+   ---------------------------------------------------------- */
+
+/* 스크린 리더 전용 텍스트 (시각적으로 숨김) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 포커스 링 (키보드 접근성) */
+:focus-visible {
+  outline: 2px solid var(--color-accent-glow);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* 버튼 기본 리셋 */
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* 링크 기본 스타일 */
+a {
+  color: var(--color-text-accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* 이미지/미디어 */
+img,
+video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* 리스트 리셋 */
+ul,
+ol {
+  list-style: none;
+}
+
+/* ----------------------------------------------------------
+   스크롤바 커스터마이징 (webkit 브라우저)
+   ---------------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-accent);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent-glow);
+}
+
+/* ----------------------------------------------------------
+   별 관측 지수 색상 유틸리티
+   컴포넌트에서 data-grade 속성으로 색상 적용 가능
+   ---------------------------------------------------------- */
+[data-grade="excellent"] { color: var(--color-score-excellent); }
+[data-grade="good"]      { color: var(--color-score-good); }
+[data-grade="fair"]      { color: var(--color-score-fair); }
+[data-grade="poor"]      { color: var(--color-score-poor); }
+[data-grade="bad"]       { color: var(--color-score-bad); }

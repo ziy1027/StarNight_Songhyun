@@ -1,0 +1,260 @@
+/* ============================================================
+   components/MoonCalendar/MoonCalendar.module.css
+   달력 전체 레이아웃 + 날짜 셀 스타일
+   ============================================================ */
+
+/* ── 달력 래퍼 ── */
+.wrapper {
+  width: 100%;
+  max-width: var(--max-width-calendar);
+  margin: 0 auto;
+}
+
+/* ── 월 네비게이션 헤더 ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+  padding: 0 var(--space-2);
+}
+
+.monthTitle {
+  font-family: var(--font-sans-en);
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+}
+
+.navBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  font-size: 1.5rem;
+  border-radius: var(--radius-full);
+  color: var(--color-text-secondary);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.navBtn:hover {
+  background: var(--color-bg-card-hover);
+  color: var(--color-text-primary);
+}
+
+/* ── 요일 헤더 ── */
+.weekRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  margin-bottom: 3px;
+}
+
+.weekLabel {
+  text-align: center;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  padding: var(--space-2) 0;
+  letter-spacing: 0.05em;
+}
+
+.weekLabel:first-child {
+  color: var(--color-score-poor);
+} /* 일요일 */
+.weekLabel:last-child {
+  color: var(--color-accent-star);
+} /* 토요일 */
+
+/* ── 날짜 그리드 ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+/* ── 스켈레톤 셀 ── */
+.skeletonCell {
+  aspect-ratio: 1;
+  min-height: 76px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-card) 0%,
+    var(--color-bg-card-hover) 50%,
+    var(--color-bg-card) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* 열마다 시차 → 좌→우 물결 효과 */
+.skeletonCell:nth-child(7n + 2) { animation-delay: 0.08s; }
+.skeletonCell:nth-child(7n + 3) { animation-delay: 0.16s; }
+.skeletonCell:nth-child(7n + 4) { animation-delay: 0.24s; }
+.skeletonCell:nth-child(7n + 5) { animation-delay: 0.32s; }
+.skeletonCell:nth-child(7n + 6) { animation-delay: 0.40s; }
+.skeletonCell:nth-child(7n + 7) { animation-delay: 0.48s; }
+
+/* ── 날짜 셀 ── */
+.cell {
+  position: relative;
+  aspect-ratio: 1;
+  min-height: 76px;
+  padding: var(--space-2);
+  padding-bottom: var(--space-5);
+  /* background: inline style로 제어 (달 조도 그라디언트) */
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color var(--transition-fast),
+    transform var(--transition-fast),
+    filter var(--transition-fast);
+}
+
+.cell:hover {
+  border-color: var(--color-border-accent);
+  transform: translateY(-1px);
+  filter: brightness(1.12);
+  z-index: 1;
+}
+
+/* 이번 달 외 날짜 */
+.otherMonth {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* 오늘 */
+.today {
+  border-color: rgba(255, 249, 226, 0.45);
+  box-shadow: 0 0 0 1px rgba(255, 249, 226, 0.2);
+}
+
+.today .dayNum {
+  color: var(--color-accent-star);
+  font-weight: 700;
+}
+
+/* 일/토 */
+.sunday .dayNum {
+  color: var(--color-score-poor);
+}
+.saturday .dayNum {
+  color: rgba(255, 249, 226, 0.75);
+}
+
+/* ── 상단 날짜 행 ── */
+.dateRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+  flex-shrink: 0;
+  padding-bottom: var(--space-1);
+}
+
+/* 양력 일자 */
+.dayNum {
+  font-family: var(--font-sans-en);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+/* 음력 날짜 */
+.lunarDay {
+  font-size: 0.6rem;
+  color: rgba(255, 249, 226, 0.4);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* ── 달 이미지 영역 ── */
+.moonWrap {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.moonImg {
+  width: 80%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* 별보기 최적일 초록 점 (isBestDay) */
+.bestDot {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  z-index: 1;
+  background: var(--color-score-excellent);
+  box-shadow: 0 0 6px var(--color-score-excellent);
+}
+
+/* 별 관측 지수 컬러 점 */
+.scoreDot {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  z-index: 1;
+}
+
+.scoreDot[data-grade="excellent"] {
+  background: var(--color-score-excellent);
+}
+.scoreDot[data-grade="good"] {
+  background: var(--color-score-good);
+}
+.scoreDot[data-grade="fair"] {
+  background: var(--color-score-fair);
+}
+.scoreDot[data-grade="poor"] {
+  background: var(--color-score-poor);
+}
+.scoreDot[data-grade="bad"] {
+  background: var(--color-score-bad);
+}
+
+/* ── 반응형 ── */
+@media (max-width: 480px) {
+  .cell {
+    min-height: 56px;
+    padding: var(--space-1);
+  }
+  .lunarDay {
+    display: none;
+  }
+}

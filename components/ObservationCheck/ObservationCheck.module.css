@@ -1,0 +1,57 @@
+/* ObservationCheck.module.css */
+
+.wrapper { display: flex; flex-direction: column; gap: var(--space-2); }
+
+/* ── 토글 버튼 ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-border);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.btn:hover  { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+
+/* 미체크 */
+.btnUnchecked {
+  color: var(--color-text-secondary);
+  background: transparent;
+}
+.btnUnchecked:hover {
+  border-color: var(--color-score-excellent);
+  color: var(--color-score-excellent);
+}
+
+/* 체크됨 */
+.btnChecked {
+  background: rgba(74, 222, 128, 0.12);
+  border-color: var(--color-score-excellent);
+  color: var(--color-score-excellent);
+  box-shadow: 0 0 16px rgba(74, 222, 128, 0.2);
+}
+
+.icon { font-size: 1.2rem; }
+
+/* 로딩 */
+.btnLoading { opacity: 0.5; cursor: not-allowed; }
+
+/* 로그인 안내 */
+.loginHint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+.loginLink {
+  color: var(--color-accent-glow);
+  text-decoration: underline;
+  cursor: pointer;
+}

@@ -1,0 +1,185 @@
+/* ============================================================
+   app/diary/write/page.module.css
+   일기 쓰기 폼 페이지
+   ============================================================ */
+
+.container {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* ── 헤더 ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+}
+
+.back {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+  white-space: nowrap;
+}
+.back:hover { color: var(--color-text-primary); }
+
+.pageTitle {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* ── 폼 ── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.required {
+  color: var(--color-score-poor);
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans-kr);
+  font-size: var(--font-size-base);
+  transition: border-color var(--transition-fast);
+  /* date/time 입력 색상 통일 */
+  color-scheme: dark;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--color-accent-glow);
+}
+.input::placeholder { color: var(--color-text-muted); }
+
+/* 날짜 + 시간 가로 배치 */
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: var(--space-4);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans-kr);
+  font-size: var(--font-size-base);
+  line-height: 1.7;
+  resize: vertical;
+  transition: border-color var(--transition-fast);
+}
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-accent-glow);
+}
+.textarea::placeholder { color: var(--color-text-muted); }
+
+/* ── 사진 업로드 ── */
+.dropzone {
+  position: relative;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+.dropzone:hover,
+.dropzone.dragover {
+  border-color: var(--color-accent-glow);
+  background: rgba(107, 159, 255, 0.04);
+}
+.dropzoneInput {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.dropzoneIcon { font-size: 2rem; margin-bottom: var(--space-2); }
+.dropzoneText { font-size: var(--font-size-sm); color: var(--color-text-muted); }
+.dropzoneHint { font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-1); }
+
+/* 미리보기 */
+.preview {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  aspect-ratio: 16/9;
+}
+.previewImg { object-fit: cover; }
+.previewRemove {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border-radius: var(--radius-full);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* ── 버튼 ── */
+.actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  padding-top: var(--space-2);
+}
+
+.saveBtn {
+  padding: var(--space-3) var(--space-6);
+  background: var(--color-accent-glow);
+  color: #fff;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  transition: opacity var(--transition-fast);
+}
+.saveBtn:hover:not(:disabled) { opacity: 0.85; }
+.saveBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.cancelBtn {
+  padding: var(--space-3) var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  transition: border-color var(--transition-fast);
+}
+.cancelBtn:hover { border-color: var(--color-border-accent); }
+
+@media (max-width: 480px) {
+  .row { grid-template-columns: 1fr; }
+}

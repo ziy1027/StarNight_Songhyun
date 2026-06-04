@@ -1,0 +1,122 @@
+/* ============================================================
+   components/DayCell/DayCell.module.css
+   ============================================================ */
+
+/* 셀 기본 레이아웃 */
+.cell {
+  position: relative;
+  aspect-ratio: 1;
+  min-height: 80px;
+  padding: var(--space-2);
+  /* background: inline style로 제어 (달 밝기 그라디언트) */
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    transform var(--transition-fast),
+    filter var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+}
+
+.cell:hover {
+  border-color: var(--color-border-accent);
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+/* 현재 달 외 날짜 */
+.cell.otherMonth {
+  opacity: 0.3;
+}
+
+/* 오늘 날짜 */
+.cell.today {
+  border-color: rgba(255, 249, 226, 0.45);
+  box-shadow: 0 0 0 1px rgba(255, 249, 226, 0.2);
+}
+
+/* ----------------------------------------------------------
+   상단 날짜 행
+   ---------------------------------------------------------- */
+.dateRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+  flex-shrink: 0;
+  padding-bottom: var(--space-1);
+}
+
+/* 양력 일자 */
+.dayNumber {
+  font-family: var(--font-sans-en);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.cell.today .dayNumber {
+  color: var(--color-accent-star);
+  font-weight: 700;
+}
+
+.cell.sunday .dayNumber {
+  color: var(--color-score-poor);
+}
+
+.cell.saturday .dayNumber {
+  color: rgba(255, 249, 226, 0.75);
+}
+
+/* 음력 날짜 */
+.lunarDate {
+  font-size: 0.625rem; /* 10px */
+  color: rgba(255, 249, 226, 0.4);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* ----------------------------------------------------------
+   달 이미지
+   ---------------------------------------------------------- */
+.moonWrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.moonImg {
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+  /* PNG 배경(검정)이 있을 경우 blend-mode로 자연스럽게 합성 */
+  mix-blend-mode: screen;
+}
+
+/* ----------------------------------------------------------
+   별 관측 지수 점
+   ---------------------------------------------------------- */
+.scoreDot {
+  position: absolute;
+  bottom: var(--space-2);
+  right: var(--space-2);
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-full);
+}
+
+.scoreDot[data-grade="excellent"] { background: var(--color-score-excellent); box-shadow: 0 0 4px var(--color-score-excellent); }
+.scoreDot[data-grade="good"]      { background: var(--color-score-good); }
+.scoreDot[data-grade="fair"]      { background: var(--color-score-fair); }
+.scoreDot[data-grade="poor"]      { background: var(--color-score-poor); }
+.scoreDot[data-grade="bad"]       { background: var(--color-score-bad); }

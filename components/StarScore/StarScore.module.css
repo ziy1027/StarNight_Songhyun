@@ -1,0 +1,79 @@
+/* ============================================================
+   components/StarScore/StarScore.module.css
+   별 관측 지수 표시 컴포넌트 스타일
+   ============================================================ */
+
+/* 컨테이너 */
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* 점수 메인 표시 */
+.scoreDisplay {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.scoreNumber {
+  font-family: var(--font-sans-en);
+  font-size: var(--font-size-4xl);
+  font-weight: 700;
+  line-height: 1;
+  /* 등급에 따른 색상은 data-grade 속성으로 제어 */
+}
+
+.scoreMax {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-muted);
+}
+
+.gradeLabel {
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+}
+
+/* 점수 바 (게이지) */
+.bar {
+  width: 100%;
+  height: 8px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 세부 내역 */
+.breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.breakdownItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.breakdownLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.breakdownScore {
+  font-family: var(--font-sans-en);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}

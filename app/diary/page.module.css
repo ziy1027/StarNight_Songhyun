@@ -1,0 +1,209 @@
+/* ============================================================
+   app/diary/page.module.css
+   일기 목록 페이지
+   ============================================================ */
+
+.container {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* ── 헤더 ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+}
+
+.headerTitle {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.writeBtn {
+  padding: var(--space-2) var(--space-5);
+  background: var(--color-accent-glow);
+  color: #fff;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity var(--transition-fast);
+  white-space: nowrap;
+}
+.writeBtn:hover { opacity: 0.85; }
+
+/* ── 탭 ── */
+.tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+.tab:hover {
+  color: var(--color-text-secondary);
+  background: var(--color-bg-card);
+}
+.tabActive {
+  color: var(--color-text-primary);
+  background: var(--color-bg-card);
+  border-color: var(--color-border);
+}
+
+.tabCount {
+  font-size: var(--font-size-xs);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+/* ── 목록 ── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  list-style: none;
+}
+
+/* ── 카드 ── */
+.card {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  padding: var(--space-4);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  text-decoration: none;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+  position: relative;
+}
+.card:hover {
+  border-color: var(--color-border-accent);
+  background: var(--color-bg-card-hover);
+}
+
+.cardThumb {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardThumbEmoji {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.cardBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.cardTitle {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardMeta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.cardLocation {
+  color: var(--color-text-muted);
+}
+
+.cardPreview {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.5;
+}
+
+.cardFav {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-4);
+  font-size: 1rem;
+  color: var(--color-accent-star);
+  line-height: 1;
+}
+
+/* ── 빈 상태 ── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-16) 0;
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.emptyText {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.emptyHint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.emptyBtn {
+  margin-top: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  background: var(--color-accent-glow);
+  color: #fff;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity var(--transition-fast);
+}
+.emptyBtn:hover { opacity: 0.85; }
