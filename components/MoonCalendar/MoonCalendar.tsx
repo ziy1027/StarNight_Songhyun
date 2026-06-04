@@ -127,16 +127,16 @@ function buildCalendarData(
     const moonScore = Math.round(getStarScore(phaseValue) / 2);
     const weatherScore = weather ? getWeatherScore(weather) : null;
 
-    // 날씨 데이터 없으면 달 점수만으로 표시 (moonScore * 2 → 0~100)
-    const total = weatherScore !== null
-      ? combineStarScore(moonScore, weatherScore)
-      : moonScore * 2;
-    const starScore: StarScore = {
-      score: total,
-      grade: toGrade(total),
-      gradeKo: toGradeKo(total),
-      breakdown: { moonScore, weatherScore: weatherScore ?? 0 },
-    };
+    let starScore: StarScore | null = null;
+    if (weatherScore !== null) {
+      const total = combineStarScore(moonScore, weatherScore);
+      starScore = {
+        score: total,
+        grade: toGrade(total),
+        gradeKo: toGradeKo(total),
+        breakdown: { moonScore, weatherScore },
+      };
+    }
 
     days.push({
       date: dateStr,
