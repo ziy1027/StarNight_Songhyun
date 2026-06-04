@@ -10,7 +10,6 @@
 
 import NextAuth from "next-auth";
 import Kakao from "next-auth/providers/kakao";
-import Google from "next-auth/providers/google";
 import { createServerClient } from "@/lib/supabase";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -22,10 +21,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientId:     process.env.KAKAO_CLIENT_ID!,
       clientSecret: process.env.KAKAO_CLIENT_SECRET!,
     }),
-    Google({
-      clientId:     process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
+    // Google은 준비됐을 때 추가
+    // Google({ clientId: process.env.GOOGLE_CLIENT_ID!, clientSecret: process.env.GOOGLE_CLIENT_SECRET! }),
   ],
 
   // ── 세션 전략: JWT ─────────────────────────────────────
