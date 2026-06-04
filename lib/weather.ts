@@ -214,7 +214,10 @@ export async function getWeatherRange(
     return new Map();
   }
 
-  if (!res.ok) return new Map();
+  if (!res.ok) {
+    console.error("[weather] getWeatherRange 실패:", res.status, `${BASE_URL}?${params}`);
+    return new Map();
+  }
 
   const data: OpenMeteoDailyResponse = await res.json();
   const result = new Map<string, WeatherData>();
