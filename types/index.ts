@@ -134,8 +134,8 @@ export interface DayCellData {
   lunar: LunarDate;
   /** 달 위상 */
   moonPhase: MoonPhase;
-  /** 별 관측 지수 (날씨 데이터 없으면 null) */
-  starScore: StarScore | null;
+  /** 별 관측 지수 (날씨 없으면 달 점수만으로 계산) */
+  starScore: StarScore;
   /** 날씨 데이터 */
   weather: WeatherData | null;
 }
