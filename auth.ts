@@ -14,6 +14,8 @@ import Google from "next-auth/providers/google";
 import { createServerClient } from "@/lib/supabase";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+
   // ── OAuth Providers ────────────────────────────────────
   providers: [
     Kakao({
