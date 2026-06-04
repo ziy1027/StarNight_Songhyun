@@ -73,13 +73,18 @@ export default function LoginButton({ compact = false }: Props) {
         className={`${styles.socialBtn} ${styles.kakaoBtn}`}
         aria-label="카카오로 로그인"
       >
-        <svg className={styles.icon} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <svg
+          className={styles.icon}
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+        >
           <path d="M12 3C6.477 3 2 6.477 2 10.8c0 2.717 1.622 5.1 4.07 6.533L5.1 21l4.623-2.432A11.4 11.4 0 0012 18.6c5.523 0 10-3.477 10-7.8S17.523 3 12 3z" />
         </svg>
         카카오 로그인
       </a>
 
-      <a
+      {/* <a
         href="/api/auth/signin/google"
         className={`${styles.socialBtn} ${styles.googleBtn}`}
         aria-label="구글로 로그인"
@@ -91,7 +96,7 @@ export default function LoginButton({ compact = false }: Props) {
           <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
         </svg>
         구글 로그인
-      </a>
+      </a> */}
     </div>
   );
 }
