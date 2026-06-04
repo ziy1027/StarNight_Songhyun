@@ -22,7 +22,6 @@ import {
   getMoonPhase,
   getMoonEmoji,
   getStarScore,
-  isBestDay,
   combineStarScore,
 } from "@/lib/moonPhase";
 import { getWeatherRange, getWeatherScore } from "@/lib/weather";
@@ -201,7 +200,9 @@ export default function MoonCalendar({
     }
 
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [year, month, latitude, longitude]);
 
   const prev = () => {
@@ -243,7 +244,12 @@ export default function MoonCalendar({
 
       {/* 날짜 그리드 */}
       {loading ? (
-        <div className={styles.grid} role="grid" aria-busy="true" aria-label="달력 불러오는 중">
+        <div
+          className={styles.grid}
+          role="grid"
+          aria-busy="true"
+          aria-label="달력 불러오는 중"
+        >
           {Array.from({ length: 42 }).map((_, i) => (
             <div key={i} className={styles.skeletonCell} aria-hidden="true" />
           ))}
@@ -279,9 +285,6 @@ function DayCell({ data }: { data: DayCellData }) {
   // 음력 표시: 1일이면 "N월 1일", 나머지는 숫자만
   const lunarText = lunar.day === 1 ? `${lunar.month}월 1일` : `${lunar.day}`;
 
-  // 별보기 최적일 판별
-  const phaseVal = getMoonPhase(new Date(date + "T12:00:00"));
-  const isBest = isBestDay(phaseVal);
 
   // 달 조도 기반 배경 그라디언트
   const illumination = getLunarIllumination(lunar.day);
@@ -344,14 +347,6 @@ function DayCell({ data }: { data: DayCellData }) {
         />
       )}
 
-      {/* 날씨 없는 그믐 → 초록 dot (천문학적 최적일만) */}
-      {!starScore && isBest && isCurrentMonth && (
-        <span
-          className={styles.bestDot}
-          aria-label="별보기 최적일"
-          title="별보기 최적일 🌟"
-        />
-      )}
     </Link>
   );
 }
