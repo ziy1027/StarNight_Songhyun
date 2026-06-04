@@ -68,7 +68,7 @@ export default async function LoginPage() {
               lineHeight: 1.7,
             }}
           >
-            별 관측 일기와 커뮤니티를 이용하려면
+            별 관측 일기를 이용하려면
             <br />
             로그인이 필요해요
           </p>
