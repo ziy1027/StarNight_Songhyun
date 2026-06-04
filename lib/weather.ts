@@ -195,10 +195,22 @@ export async function getWeatherRange(
     end_date:   endDate,
   });
 
+  // Open-Meteo forecast API는 최대 16일 앞까지만 지원
+  // end_date가 범위 초과면 오늘+16일로 자름
+  const today = new Date();
+  const maxDate = new Date(today);
+  maxDate.setDate(today.getDate() + 16);
+  const maxDateStr = maxDate.toISOString().slice(0, 10);
+  if (endDate > maxDateStr) {
+    params.set("end_date", maxDateStr);
+  }
+  // start_date가 오늘보다 미래면 날씨 없음
+  if (startDate > maxDateStr) return new Map();
+
   let res: Response;
   try {
     res = await fetch(`${BASE_URL}?${params}`, {
-      next: { revalidate: 3600 }, // 1시간 단위 캐시
+      next: { revalidate: 3600 },
     });
   } catch {
     return new Map();
