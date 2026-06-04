@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import "@/styles/globals.css";
-import Image from "next/image";
 import SessionProvider from "@/components/Providers/SessionProvider";
-import LoginButton from "@/components/LoginButton/LoginButton";
+import Header from "@/components/Header/Header";
 import BottomNav from "@/components/BottomNav/BottomNav";
-import Link from "next/link";
 import { auth } from "@/auth";
+import Providers from "./providers";
 
 export const metadata: Metadata = {
   title: {
@@ -51,71 +50,28 @@ export default async function RootLayout({
         <meta name="theme-color" content="#112138" />
       </head>
       <body>
-        <SessionProvider session={session}>
-          {/* ── 헤더: 로고 + 로그인 버튼만 ── */}
-          <header
-            style={{
-              height: "var(--header-height)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "0 var(--space-5)",
-              borderBottom: "1px solid var(--color-border)",
-              position: "sticky",
-              top: 0,
-              zIndex: 100,
-              backdropFilter: "blur(12px)",
-              background: "rgba(17, 33, 56, 0.90)",
-            }}
-          >
-            <Link
-              href="/"
+        <Providers>
+          <SessionProvider session={session}>
+            {/* ── 헤더 ── */}
+            <Header />
+
+            {/* ── 페이지 콘텐츠 ── */}
+            <main
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-2)",
-                textDecoration: "none",
+                minHeight:
+                  "calc(100vh - var(--header-height) - var(--bottom-nav-height))",
+                padding: "var(--space-5) var(--space-4)",
+                paddingBottom:
+                  "calc(var(--bottom-nav-height) + var(--space-5))",
               }}
             >
-              <Image
-                src="/logo_white.svg"
-                alt=""
-                width={130}
-                height={34}
-                priority
-                style={{ objectFit: "contain", width: "auto", height: "28px" }}
-              />
-              <span
-                style={{
-                  fontFamily: "var(--font-logo)",
-                  fontSize: "var(--font-size-lx)",
-                  fontWeight: 400,
-                  color: "var(--color-text-primary)",
-                  letterSpacing: "0.05em",
-                }}
-              >
-                StarNight
-              </span>
-            </Link>
+              {children}
+            </main>
 
-            <LoginButton compact />
-          </header>
-
-          {/* ── 페이지 콘텐츠 ── */}
-          <main
-            style={{
-              minHeight:
-                "calc(100vh - var(--header-height) - var(--bottom-nav-height))",
-              padding: "var(--space-5) var(--space-4)",
-              paddingBottom: "calc(var(--bottom-nav-height) + var(--space-5))",
-            }}
-          >
-            {children}
-          </main>
-
-          {/* ── 하단 탭바 ── */}
-          <BottomNav />
-        </SessionProvider>
+            {/* ── 하단 탭바 ── */}
+            <BottomNav />
+          </SessionProvider>
+        </Providers>
       </body>
     </html>
   );

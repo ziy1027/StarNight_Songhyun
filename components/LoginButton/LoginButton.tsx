@@ -12,6 +12,7 @@ import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./LoginButton.module.css";
+import { signIn } from "next-auth/react";
 
 interface Props {
   /** true → 헤더용 (미로그인 시 로그인 페이지 링크만 표시) */
@@ -68,10 +69,10 @@ export default function LoginButton({ compact = false }: Props) {
   // 미로그인 — 로그인 페이지: 소셜 버튼 전체 표시
   return (
     <div className={styles.wrapper}>
-      <a
-        href="/api/auth/signin/kakao"
+      <button
         className={`${styles.socialBtn} ${styles.kakaoBtn}`}
         aria-label="카카오로 로그인"
+        onClick={() => signIn("kakao", { callbackUrl: "/" })}
       >
         <svg
           className={styles.icon}
@@ -82,7 +83,7 @@ export default function LoginButton({ compact = false }: Props) {
           <path d="M12 3C6.477 3 2 6.477 2 10.8c0 2.717 1.622 5.1 4.07 6.533L5.1 21l4.623-2.432A11.4 11.4 0 0012 18.6c5.523 0 10-3.477 10-7.8S17.523 3 12 3z" />
         </svg>
         카카오 로그인
-      </a>
+      </button>
 
       {/* <a
         href="/api/auth/signin/google"
