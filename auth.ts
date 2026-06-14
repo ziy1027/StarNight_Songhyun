@@ -48,15 +48,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       try {
         const supabase = createServerClient();
+        const upsertData: Record<string, unknown> = {
+          id: user.id,
+          name: user.name ?? null,
+          image: user.image ?? null,
+          provider: account.provider,
+        };
+        if (user.email) upsertData.email = user.email;
+
         const { error } = await supabase.from("users").upsert(
-          {
-            id: user.id,
-            email: user.email ?? null,
-            name: user.name ?? null,
-            image: user.image ?? null,
-            provider: account.provider, // 'kakao' | 'google'
-          },
-          { onConflict: "id" }, // id 충돌 시 update
+          upsertData,
+          { onConflict: "id" },
         );
 
         if (error) {

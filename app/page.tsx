@@ -77,6 +77,7 @@ export default function HomePage() {
 
   // ── 날씨 & 위치
   const [coords, setCoords] = useState(DEFAULT_COORDS);
+  const [locationName, setLocationName] = useState<string | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
 
@@ -109,6 +110,7 @@ export default function HomePage() {
       const pos = await getBrowserCoords();
       const c = pos ?? DEFAULT_COORDS;
       setCoords(c);
+      setLocationName(pos ? null : "서울 (위치 권한 없음)");
 
       const w = await getWeatherByCoords(c.latitude, c.longitude);
       setWeather(w);
@@ -177,6 +179,9 @@ export default function HomePage() {
                 {weather && (
                   <span className={styles.summaryWeather}>
                     {weather.description} · 운량 {weather.cloudCover}%
+                    {locationName && (
+                      <span className={styles.locationFallback}> ({locationName})</span>
+                    )}
                   </span>
                 )}
               </div>

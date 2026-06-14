@@ -185,6 +185,11 @@
   color: var(--color-text-secondary);
 }
 
+.locationFallback {
+  color: var(--color-score-poor);
+  font-size: 0.65rem;
+}
+
 /* 하단 행: 점수 + 설명 */
 .summaryBottom {
   display: flex;

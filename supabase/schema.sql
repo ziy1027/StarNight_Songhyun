@@ -9,7 +9,7 @@
 -- ──────────────────────────────────────────────────────────
 create table if not exists public.users (
   id          text        primary key,          -- NextAuth user.id (OAuth sub)
-  email       text        unique not null,
+  email       text        unique,               -- nullable: 카카오는 이메일 미제공 가능
   name        text,
   image       text,                             -- 프로필 이미지 URL
   provider    text        not null,             -- 'kakao' | 'google'
@@ -21,18 +21,24 @@ create table if not exists public.users (
 -- 날짜별 별 관측 일기
 -- ──────────────────────────────────────────────────────────
 create table if not exists public.diaries (
-  id           uuid        primary key default gen_random_uuid(),
-  user_id      text        not null references public.users(id) on delete cascade,
-  date         date        not null,            -- 관측 날짜 (YYYY-MM-DD)
-  content      text        not null default '', -- 일기 본문
-  photo_url    text,                            -- Supabase Storage URL
-  moon_phase   text,                            -- getMoonEmoji().name
-  moon_emoji   text,                            -- 🌑 ~ 🌘
-  weather_code integer,                         -- WMO 날씨 코드
-  cloud_cover  integer,                         -- 운량 (0~100)
-  created_at   timestamptz not null default now(),
-  updated_at   timestamptz not null default now(),
-  unique (user_id, date)                        -- 날짜당 일기 1개
+  id            uuid        primary key default gen_random_uuid(),
+  user_id       text        not null references public.users(id) on delete cascade,
+  date          date        not null,
+  title         text        not null default '',
+  content       text        not null default '',
+  photo_url     text,
+  moon_phase    text,
+  moon_emoji    text,
+  weather_code  integer,
+  cloud_cover   integer,
+  is_favorite   boolean     not null default false,
+  location_name text,
+  lat           numeric(9,6),
+  lng           numeric(9,6),
+  observed_at   timestamptz,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now(),
+  unique (user_id, date)
 );
 
 -- updated_at 자동 갱신 트리거
