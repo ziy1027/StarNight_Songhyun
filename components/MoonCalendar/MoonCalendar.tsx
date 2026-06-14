@@ -353,14 +353,6 @@ function DayCell({ data }: { data: DayCellData }) {
         />
       )}
 
-      {/* 날씨 없어도 그믐 최적일이면 달 점수 dot */}
-      {!starScore && bestDay && isCurrentMonth && (
-        <span
-          className={styles.scoreDot}
-          data-grade="good"
-          title="그믐 최적 관측일 (날씨 정보 없음)"
-        />
-      )}
     </Link>
   );
 }
