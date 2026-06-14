@@ -11,7 +11,11 @@ import type { WeatherData, Location } from "@/types";
 // 상수
 // ----------------------------------------------------------
 
-const BASE_URL = "https://api.open-meteo.com/v1/forecast";
+const BASE_URL    = "https://api.open-meteo.com/v1/forecast";
+const ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive";
+
+// archive API는 약 3일 전까지만 데이터 있음 (그 이후는 forecast API)
+const ARCHIVE_LAG_DAYS = 3;
 
 /**
  * 전국 별 관측 후보지 좌표 목록
@@ -181,20 +185,64 @@ export async function getNationwideClearSpots(): Promise<Location[]> {
   return locations.sort((a, b) => a.cloudCover - b.cloudCover);
 }
 
+// ----------------------------------------------------------
+// 내부 파싱 유틸
+// ----------------------------------------------------------
+
+/** hourly 응답에서 20~23시 데이터만 날짜별로 집계 */
+function parseHourlyNight(data: OpenMeteoHourlyResponse): Map<string, WeatherData> {
+  const byDate = new Map<string, { cloud: number[]; codes: number[] }>();
+  data.hourly.time.forEach((timeStr, i) => {
+    const hour = parseInt(timeStr.slice(11, 13), 10);
+    if (hour < 20) return;
+    const date = timeStr.slice(0, 10);
+    if (!byDate.has(date)) byDate.set(date, { cloud: [], codes: [] });
+    const e = byDate.get(date)!;
+    e.cloud.push(data.hourly.cloud_cover[i] ?? 0);
+    e.codes.push(data.hourly.weather_code[i] ?? 0);
+  });
+
+  const result = new Map<string, WeatherData>();
+  byDate.forEach(({ cloud, codes }, date) => {
+    if (!cloud.length) return;
+    const avg = (arr: number[]) => Math.round(arr.reduce((s, v) => s + v, 0) / arr.length);
+    const cloudCover  = avg(cloud);
+    const weatherCode = codes[Math.floor(codes.length / 2)] ?? codes[0];
+    const precipProb  = Math.max(...codes.map(estimatePrecipFromCode));
+    result.set(date, { cloudCover, precipitationProbability: precipProb, weatherCode, description: wmoToKo(weatherCode) });
+  });
+  return result;
+}
+
+/** "YYYY-MM-DD" → 로컬 자정 ms */
+function parseDateMs(s: string): number {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, m - 1, d).getTime();
+}
+
+/** 로컬 자정 ms → "YYYY-MM-DD" */
+function msToDateStr(ms: number): string {
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+async function fetchHourlyNight(url: string): Promise<Map<string, WeatherData>> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) { console.error("[weather] fetch 실패:", res.status, url); return new Map(); }
+    return parseHourlyNight(await res.json());
+  } catch (err) {
+    console.error("[weather] 네트워크 오류:", err);
+    return new Map();
+  }
+}
+
 /**
- * 특정 월의 날씨 예보를 날짜 범위로 가져온다.
- * 달력 월간 뷰에서 날짜별 운량을 미리 로드할 때 사용.
+ * 날짜 범위의 저녁(20~23시) 날씨를 가져온다.
  *
- * @param lat       - 위도
- * @param lng       - 경도
- * @param startDate - 시작 날짜 (YYYY-MM-DD)
- * @param endDate   - 종료 날짜 (YYYY-MM-DD)
- * @returns date(YYYY-MM-DD) → WeatherData 맵
- */
-/**
- * 특정 월의 날씨 예보를 날짜 범위로 가져온다.
- * 별 관측 시간대인 저녁 20~23시 hourly 데이터를 사용해
- * 일별 일간 평균(all-day mean) 대신 밤하늘 조건을 정확하게 반영한다.
+ * 과거 데이터 정확도:
+ *   - 3일 이전: archive-api.open-meteo.com (ERA5 실측값) ← 정확
+ *   - 최근 3일 + 미래: api.open-meteo.com/v1/forecast (예보 모델)
  */
 export async function getWeatherRange(
   lat: number,
@@ -202,91 +250,40 @@ export async function getWeatherRange(
   startDate: string,
   endDate: string
 ): Promise<Map<string, WeatherData>> {
-  const todayMidnight = new Date();
-  todayMidnight.setHours(0, 0, 0, 0);
-  const todayMs = todayMidnight.getTime();
+  const todayMs     = (() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); })();
+  const startMs     = parseDateMs(startDate);
+  const endMs       = parseDateMs(endDate);
+  // archive 데이터는 오늘 기준 ARCHIVE_LAG_DAYS일 전까지 이용 가능
+  const archiveCutMs = todayMs - ARCHIVE_LAG_DAYS * 86_400_000;
 
-  // "YYYY-MM-DD" → 로컬 자정 ms (new Date("YYYY-MM-DD")는 UTC로 파싱돼 시차 발생)
-  const parseLocalDate = (s: string) => {
-    const [y, m, d] = s.split("-").map(Number);
-    const dt = new Date(y, m - 1, d);
-    return dt.getTime();
-  };
-
-  const startMs = parseLocalDate(startDate);
-  const endMs   = parseLocalDate(endDate);
-
-  const pastDays     = Math.max(0, Math.ceil((todayMs - startMs) / 86_400_000));
-  const forecastDays = Math.max(1, Math.ceil((endMs - todayMs) / 86_400_000) + 1);
-
-  // 과거 92일 / 미래 16일 제한
-  const clampedPast     = Math.min(pastDays, 92);
-  const clampedForecast = Math.min(forecastDays, 16);
-
-  // 요청 범위가 아예 미래 16일 밖이면 빈 맵 반환
   if (startMs > todayMs + 16 * 86_400_000) return new Map();
 
-  const params = new URLSearchParams({
-    latitude:       lat.toString(),
-    longitude:      lng.toString(),
-    hourly:         "cloud_cover,weather_code",
-    timezone:       "Asia/Seoul",
-    past_days:      clampedPast.toString(),
-    forecast_days:  clampedForecast.toString(),
-  });
+  const common = `latitude=${lat}&longitude=${lng}&hourly=cloud_cover,weather_code&timezone=Asia%2FSeoul`;
 
-  const fetchUrl = `${BASE_URL}?${params}`;
-  console.log("[weather] getWeatherRange 요청:", fetchUrl);
+  // Archive 구간: startDate ~ min(endDate, archiveCut - 1일)
+  const archivePromise: Promise<Map<string, WeatherData>> =
+    startMs < archiveCutMs
+      ? fetchHourlyNight(
+          `${ARCHIVE_URL}?${common}&start_date=${startDate}&end_date=${msToDateStr(Math.min(endMs, archiveCutMs - 86_400_000))}`
+        )
+      : Promise.resolve(new Map());
 
-  let res: Response;
-  try {
-    res = await fetch(fetchUrl);
-  } catch (err) {
-    console.error("[weather] getWeatherRange 네트워크 오류:", err);
-    return new Map();
-  }
+  // Forecast 구간: max(startDate, archiveCut) ~ endDate
+  const forecastPromise: Promise<Map<string, WeatherData>> =
+    endMs >= archiveCutMs
+      ? (() => {
+          const fStartMs = Math.max(startMs, archiveCutMs);
+          const pastDays     = Math.min(Math.max(0, Math.ceil((todayMs - fStartMs) / 86_400_000)), 92);
+          const forecastDays = Math.min(Math.max(1, Math.ceil((endMs - todayMs) / 86_400_000) + 1), 16);
+          return fetchHourlyNight(`${BASE_URL}?${common}&past_days=${pastDays}&forecast_days=${forecastDays}`);
+        })()
+      : Promise.resolve(new Map());
 
-  if (!res.ok) {
-    console.error("[weather] getWeatherRange 실패:", res.status, fetchUrl);
-    return new Map();
-  }
+  const [archiveMap, forecastMap] = await Promise.all([archivePromise, forecastPromise]);
 
-  const data: OpenMeteoHourlyResponse = await res.json();
-  console.log("[weather] hourly 데이터 길이:", data.hourly?.time?.length ?? 0, "첫 시각:", data.hourly?.time?.[0], "마지막:", data.hourly?.time?.at(-1));
-
-  const result = new Map<string, WeatherData>();
-
-  // 날짜별로 20~23시 hourly 데이터 수집
-  const byDate = new Map<string, { cloud: number[]; codes: number[] }>();
-
-  data.hourly.time.forEach((timeStr, i) => {
-    const date = timeStr.slice(0, 10);
-    const hour = parseInt(timeStr.slice(11, 13), 10);
-    if (hour < 20) return;
-
-    if (!byDate.has(date)) byDate.set(date, { cloud: [], codes: [] });
-    const entry = byDate.get(date)!;
-    entry.cloud.push(data.hourly.cloud_cover[i] ?? 0);
-    entry.codes.push(data.hourly.weather_code[i] ?? 0);
-  });
-
-  console.log("[weather] byDate 날짜 수:", byDate.size, "키 예시:", [...byDate.keys()].slice(0, 3));
-
-  byDate.forEach(({ cloud, codes }, date) => {
-    if (cloud.length === 0) return;
-    const avg = (arr: number[]) => Math.round(arr.reduce((s, v) => s + v, 0) / arr.length);
-    const cloudCover  = avg(cloud);
-    const weatherCode = codes[Math.floor(codes.length / 2)] ?? codes[0];
-    const precipProb  = Math.max(...codes.map(estimatePrecipFromCode));
-
-    result.set(date, {
-      cloudCover,
-      precipitationProbability: precipProb,
-      weatherCode,
-      description: wmoToKo(weatherCode),
-    });
-  });
-
+  // 병합: archive(실측) 우선, 없는 날짜는 forecast로 보완
+  const result = new Map<string, WeatherData>(forecastMap);
+  archiveMap.forEach((v, k) => result.set(k, v));
   return result;
 }
 
