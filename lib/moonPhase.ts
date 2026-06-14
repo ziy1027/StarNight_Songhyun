@@ -221,17 +221,21 @@ export function isBestDay(phase: number): boolean {
 /**
  * 달 위상 점수(0~50)와 날씨 점수(0~50)를 결합해 최종 별 관측 지수(0~100)를 산출한다.
  *
- * 날씨는 가시성 게이트: 흐리면 달 위상과 무관하게 볼 수 없다.
- * 달은 맑은 하늘 안에서 조건을 조절하는 배율 역할.
+ * 날씨 70% / 달 위상 30% 비중.
+ * 달 보너스는 날씨가 맑을수록 커진다 — 흐린 날엔 달 위상이 의미 없음.
  *
- * 공식: total = weatherScore × (1 + moonScore / 50)
- *   - 날씨 0(완전 흐림) → 달 무관하게 0
- *   - 날씨 50 + 달 50(그믐) → 100
- *   - 날씨 50 + 달 0(보름) → 50
- *   - 날씨 10 + 달 50(그믐) → 20 (기존 공식은 60으로 오류)
+ *   score = w×70 + m×30×w   (w = 날씨비율 0~1, m = 달비율 0~1)
+ *
+ * 주요 케이스:
+ *   - 맑음(50) + 그믐(50) → 70 + 30 = 100  ← 최상
+ *   - 맑음(50) + 보름(0)  → 70 + 0  = 70   ← 밝은 별은 보임
+ *   - 흐림(0)  + 그믐(50) → 0  + 0  = 0    ← 관측 불가
+ *   - 반흐림(25) + 그믐(50) → 35 + 15 = 50  ← 보통
  */
 export function combineStarScore(moonScore: number, weatherScore: number): number {
-  return Math.round(weatherScore * (1 + moonScore / 50));
+  const w = weatherScore / 50;
+  const m = moonScore / 50;
+  return Math.max(0, Math.min(100, Math.round(w * 70 + m * 30 * w)));
 }
 
 // ----------------------------------------------------------

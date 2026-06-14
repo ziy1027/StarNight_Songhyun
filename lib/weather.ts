@@ -288,8 +288,11 @@ export async function getWeatherRange(
  * - 강수 확률이 낮을수록 높은 점수
  */
 export function getWeatherScore(weather: WeatherData): number {
-  const cloudScore  = Math.round((1 - weather.cloudCover / 100) * 35);
-  const precipScore = Math.round((1 - weather.precipitationProbability / 100) * 15);
+  // 운량이 90% 이상이면 관측 불가 수준 → 최대 5점으로 하드 캡
+  if (weather.cloudCover >= 90) return Math.min(5, Math.round((1 - weather.precipitationProbability / 100) * 5));
+
+  const cloudScore  = Math.round((1 - weather.cloudCover / 100) * 40);
+  const precipScore = Math.round((1 - weather.precipitationProbability / 100) * 10);
   return Math.max(0, Math.min(50, cloudScore + precipScore));
 }
 
