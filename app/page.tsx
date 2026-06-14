@@ -215,14 +215,14 @@ export default function HomePage() {
           {/* ── 범례 ── */}
           <Legend />
 
-          {/* ── 위치 권한 거절 안내 ── */}
-          {locationName && (
-            <p className={styles.locationNotice}>
-              📍 위치 권한이 거부되어 서울 기준 날씨로 표시됩니다.
-              정확한 날씨를 보려면 브라우저 설정에서 위치 권한을 허용해주세요.
-            </p>
-          )}
         </div>
+      )}
+
+      {/* ── 위치 권한 거절 안내 (하단 고정) ── */}
+      {!showLoading && locationName && (
+        <p className={styles.locationNotice}>
+          📍 위치 권한이 거부되어 서울 기준 날씨로 표시됩니다. 정확한 날씨를 보려면 브라우저 설정에서 위치 권한을 허용해주세요.
+        </p>
       )}
 
       <h1 className="sr-only">StarNight — 별 관측 최적일 달력</h1>

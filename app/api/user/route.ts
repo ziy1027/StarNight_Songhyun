@@ -85,11 +85,11 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "변경할 내용이 없습니다" }, { status: 400 });
   }
 
-  // upsert: users 행이 없는 경우(DB 재생성 등)도 안전하게 처리
+  // upsert: provider NOT NULL 이므로 반드시 포함
   const { data, error } = await supabase
     .from("users")
     .upsert(
-      { id: userId, ...updates },
+      { id: userId, provider: "kakao", ...updates },
       { onConflict: "id" }
     )
     .select("id, email, name, image, provider, created_at")
