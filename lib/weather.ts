@@ -202,24 +202,30 @@ export async function getWeatherRange(
   startDate: string,
   endDate: string
 ): Promise<Map<string, WeatherData>> {
-  // Open-Meteo forecast API는 최대 16일 앞까지만 지원
-  const today = new Date();
-  const maxDate = new Date(today);
-  maxDate.setDate(today.getDate() + 16);
-  const maxDateStr = maxDate.toISOString().slice(0, 10);
+  const todayMidnight = new Date();
+  todayMidnight.setHours(0, 0, 0, 0);
 
-  const clampedEnd = endDate > maxDateStr ? maxDateStr : endDate;
-  if (startDate > maxDateStr) return new Map();
+  // 과거 날짜는 past_days, 미래는 forecast_days 로 요청해야 정상 동작
+  const startMs = new Date(startDate).getTime();
+  const endMs   = new Date(endDate).getTime();
 
-  // precipitation_probability는 과거 날짜 미지원 → cloud_cover + weather_code만 요청
-  // start_date/end_date로 특정 범위 지정 (forecast API는 과거 92일까지 지원)
+  const pastDays     = Math.max(0, Math.ceil((todayMidnight.getTime() - startMs) / 86_400_000));
+  const forecastDays = Math.max(1, Math.ceil((endMs - todayMidnight.getTime()) / 86_400_000));
+
+  // 과거 92일 / 미래 16일 제한
+  const clampedPast     = Math.min(pastDays, 92);
+  const clampedForecast = Math.min(forecastDays, 16);
+
+  // 요청 범위가 아예 미래 16일 밖이면 빈 맵 반환
+  if (startMs > todayMidnight.getTime() + 16 * 86_400_000) return new Map();
+
   const params = new URLSearchParams({
-    latitude:   lat.toString(),
-    longitude:  lng.toString(),
-    hourly:     "cloud_cover,weather_code",
-    timezone:   "Asia/Seoul",
-    start_date: startDate,
-    end_date:   clampedEnd,
+    latitude:       lat.toString(),
+    longitude:      lng.toString(),
+    hourly:         "cloud_cover,weather_code",
+    timezone:       "Asia/Seoul",
+    past_days:      clampedPast.toString(),
+    forecast_days:  clampedForecast.toString(),
   });
 
   let res: Response;
