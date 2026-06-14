@@ -204,20 +204,27 @@ export async function getWeatherRange(
 ): Promise<Map<string, WeatherData>> {
   const todayMidnight = new Date();
   todayMidnight.setHours(0, 0, 0, 0);
+  const todayMs = todayMidnight.getTime();
 
-  // 과거 날짜는 past_days, 미래는 forecast_days 로 요청해야 정상 동작
-  const startMs = new Date(startDate).getTime();
-  const endMs   = new Date(endDate).getTime();
+  // "YYYY-MM-DD" → 로컬 자정 ms (new Date("YYYY-MM-DD")는 UTC로 파싱돼 시차 발생)
+  const parseLocalDate = (s: string) => {
+    const [y, m, d] = s.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    return dt.getTime();
+  };
 
-  const pastDays     = Math.max(0, Math.ceil((todayMidnight.getTime() - startMs) / 86_400_000));
-  const forecastDays = Math.max(1, Math.ceil((endMs - todayMidnight.getTime()) / 86_400_000));
+  const startMs = parseLocalDate(startDate);
+  const endMs   = parseLocalDate(endDate);
+
+  const pastDays     = Math.max(0, Math.ceil((todayMs - startMs) / 86_400_000));
+  const forecastDays = Math.max(1, Math.ceil((endMs - todayMs) / 86_400_000) + 1);
 
   // 과거 92일 / 미래 16일 제한
   const clampedPast     = Math.min(pastDays, 92);
   const clampedForecast = Math.min(forecastDays, 16);
 
   // 요청 범위가 아예 미래 16일 밖이면 빈 맵 반환
-  if (startMs > todayMidnight.getTime() + 16 * 86_400_000) return new Map();
+  if (startMs > todayMs + 16 * 86_400_000) return new Map();
 
   const params = new URLSearchParams({
     latitude:       lat.toString(),

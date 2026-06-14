@@ -339,11 +339,6 @@ function DayCell({ data }: { data: DayCellData }) {
         />
       </div>
 
-      {/* 별보기 최적일 별 배지 (날씨+달 모두 있고 excellent일 때) */}
-      {starScore && isCurrentMonth && starScore.grade === "excellent" && (
-        <span className={styles.bestBadge} aria-hidden="true">⭐</span>
-      )}
-
       {/* 합산 점수 dot — 날씨+달 데이터 있을 때 */}
       {starScore && isCurrentMonth && (
         <span
