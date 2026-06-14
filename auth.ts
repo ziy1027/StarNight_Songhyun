@@ -76,10 +76,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
      * JWT 생성/갱신 시 호출
      * token에 user.id를 저장해 session에서 접근 가능하게 함
      */
-    async jwt({ token, user }) {
-      // 최초 로그인 시 user 객체가 있음 → token에 id 저장
+    async jwt({ token, user, trigger, session }) {
       if (user?.id) {
         token.userId = user.id;
+      }
+      // update() 호출 시 이름·이미지 즉시 반영
+      if (trigger === "update" && session) {
+        if (session.name  !== undefined) token.name    = session.name;
+        if (session.image !== undefined) token.picture = session.image;
       }
       return token;
     },

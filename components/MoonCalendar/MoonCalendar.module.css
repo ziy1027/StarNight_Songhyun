@@ -218,6 +218,7 @@
   height: auto;
   max-width: 40px;
   max-height: 40px;
+  max-height: min(40px, 100%); /* moonWrap 높이 초과 방지 */
   object-fit: contain;
 }
 
@@ -247,6 +248,7 @@
 
 .scoreDot[data-grade="excellent"] {
   background: var(--color-score-excellent);
+  box-shadow: 0 0 6px var(--color-score-excellent);
 }
 .scoreDot[data-grade="good"] {
   background: var(--color-score-good);
@@ -261,13 +263,38 @@
   background: var(--color-score-bad);
 }
 
-/* ── 반응형 ── */
+/* 별보기 최적일 — excellent 등급일 때 셀 상단에 별 표시 */
+.bestBadge {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  font-size: 0.55rem;
+  line-height: 1;
+  opacity: 0.9;
+  z-index: 1;
+}
+
+/* ── 반응형 (모바일 430px 최적화) ── */
 @media (max-width: 480px) {
   .cell {
-    min-height: 56px;
+    min-height: 54px;
     padding: var(--space-1);
+    padding-bottom: 14px; /* dot 공간 확보, 기존 20px에서 축소 */
   }
   .lunarDay {
     display: none;
+  }
+  .moonImg {
+    max-width: 26px;
+    max-height: 26px;
+  }
+  .scoreDot {
+    width: 6px;
+    height: 6px;
+    bottom: 4px;
+    right: 4px;
+  }
+  .bestBadge {
+    display: none; /* 작은 화면에서는 dot만 */
   }
 }

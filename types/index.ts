@@ -138,6 +138,8 @@ export interface DayCellData {
   starScore: StarScore | null;
   /** 날씨 데이터 */
   weather: WeatherData | null;
+  /** 그믐 전후 최적 관측일 여부 */
+  isBestDay: boolean;
 }
 
 /** 달력 전체 데이터 */

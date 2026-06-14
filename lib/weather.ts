@@ -211,27 +211,16 @@ export async function getWeatherRange(
   const clampedEnd = endDate > maxDateStr ? maxDateStr : endDate;
   if (startDate > maxDateStr) return new Map();
 
-  // past_days: 과거 날짜 포함 시 필요 (최대 92일 과거까지 지원)
-  const todayStr = today.toISOString().slice(0, 10);
-  const needPast = startDate < todayStr;
-
+  // precipitation_probability는 과거 날짜 미지원 → cloud_cover + weather_code만 요청
+  // start_date/end_date로 특정 범위 지정 (forecast API는 과거 92일까지 지원)
   const params = new URLSearchParams({
     latitude:   lat.toString(),
     longitude:  lng.toString(),
-    hourly:     "cloud_cover,weather_code",   // precipitation_probability는 과거 날짜 미지원
+    hourly:     "cloud_cover,weather_code",
     timezone:   "Asia/Seoul",
     start_date: startDate,
     end_date:   clampedEnd,
   });
-
-  if (needPast) {
-    // forecast 엔드포인트는 past_days로 과거 포함 가능 (start_date 대신)
-    const pastDays = Math.ceil(
-      (today.getTime() - new Date(startDate).getTime()) / 86_400_000
-    );
-    params.delete("start_date");
-    params.set("past_days", Math.min(pastDays, 92).toString());
-  }
 
   let res: Response;
   try {

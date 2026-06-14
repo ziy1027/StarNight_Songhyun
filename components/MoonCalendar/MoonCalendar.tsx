@@ -23,6 +23,7 @@ import {
   getMoonEmoji,
   getStarScore,
   combineStarScore,
+  isBestDay,
 } from "@/lib/moonPhase";
 import { getWeatherRange, getWeatherScore } from "@/lib/weather";
 import type {
@@ -146,6 +147,7 @@ function buildCalendarData(
       moonPhase,
       starScore,
       weather,
+      isBestDay: isBestDay(phaseValue),
     });
   }
 
@@ -275,7 +277,7 @@ function getLunarIllumination(lunarDay: number): number {
 }
 
 function DayCell({ data }: { data: DayCellData }) {
-  const { date, day, isCurrentMonth, isToday, lunar, moonPhase, starScore } =
+  const { date, day, isCurrentMonth, isToday, lunar, moonPhase, starScore, isBestDay: bestDay } =
     data;
 
   const dow = new Date(date + "T00:00:00").getDay();
@@ -284,7 +286,6 @@ function DayCell({ data }: { data: DayCellData }) {
 
   // 음력 표시: 1일이면 "N월 1일", 나머지는 숫자만
   const lunarText = lunar.day === 1 ? `${lunar.month}월 1일` : `${lunar.day}`;
-
 
   // 달 조도 기반 배경 그라디언트
   const illumination = getLunarIllumination(lunar.day);
@@ -338,15 +339,28 @@ function DayCell({ data }: { data: DayCellData }) {
         />
       </div>
 
-      {/* 날씨 있으면 → 합산 점수 dot (그믐 포함 모든 날) */}
+      {/* 별보기 최적일 별 배지 (날씨+달 모두 있고 excellent일 때) */}
+      {starScore && isCurrentMonth && starScore.grade === "excellent" && (
+        <span className={styles.bestBadge} aria-hidden="true">⭐</span>
+      )}
+
+      {/* 합산 점수 dot — 날씨+달 데이터 있을 때 */}
       {starScore && isCurrentMonth && (
         <span
           className={styles.scoreDot}
           data-grade={starScore.grade}
-          title={`지수 ${starScore.score}점`}
+          title={`별보기 지수 ${starScore.score}점`}
         />
       )}
 
+      {/* 날씨 없어도 그믐 최적일이면 달 점수 dot */}
+      {!starScore && bestDay && isCurrentMonth && (
+        <span
+          className={styles.scoreDot}
+          data-grade="good"
+          title="그믐 최적 관측일 (날씨 정보 없음)"
+        />
+      )}
     </Link>
   );
 }

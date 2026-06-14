@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -15,25 +15,37 @@ interface UserProfile {
   created_at: string;
 }
 
+interface Toast {
+  id: number;
+  type: "success" | "error";
+  text: string;
+}
+
+let toastId = 0;
+
 export default function MyPage() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
 
-  const [profile, setProfile]   = useState<UserProfile | null>(null);
-  const [name, setName]         = useState("");
-  const [email, setEmail]       = useState("");
-  const [photo, setPhoto]       = useState<File | null>(null);
-  const [preview, setPreview]   = useState<string | null>(null);
-  const [saving, setSaving]     = useState(false);
-  const [message, setMessage]   = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [name,    setName]    = useState("");
+  const [email,   setEmail]   = useState("");
+  const [photo,   setPhoto]   = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [saving,  setSaving]  = useState(false);
+  const [toasts,  setToasts]  = useState<Toast[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // 미로그인 → 리다이렉트
+  const addToast = useCallback((type: "success" | "error", text: string) => {
+    const id = ++toastId;
+    setToasts((prev) => [...prev, { id, type, text }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
+  }, []);
+
   useEffect(() => {
     if (status === "unauthenticated") router.replace("/login");
   }, [status, router]);
 
-  // 프로필 fetch
   useEffect(() => {
     if (status !== "authenticated") return;
     fetch("/api/user")
@@ -43,8 +55,8 @@ export default function MyPage() {
         setName(data.name ?? "");
         setEmail(data.email ?? "");
       })
-      .catch(() => setMessage({ type: "error", text: "프로필을 불러오지 못했습니다." }));
-  }, [status]);
+      .catch(() => addToast("error", "프로필을 불러오지 못했습니다."));
+  }, [status, addToast]);
 
   function handleFile(file: File) {
     if (!file.type.startsWith("image/")) return;
@@ -54,30 +66,32 @@ export default function MyPage() {
 
   async function handleSave() {
     setSaving(true);
-    setMessage(null);
 
     const fd = new FormData();
-    if (name.trim() && name.trim() !== profile?.name)   fd.append("name",  name.trim());
+    if (name.trim()  && name.trim()  !== profile?.name)  fd.append("name",  name.trim());
     if (email.trim() && email.trim() !== profile?.email) fd.append("email", email.trim());
-    if (photo)                                            fd.append("photo", photo);
+    if (photo) fd.append("photo", photo);
 
     if ([...fd.keys()].length === 0) {
-      setMessage({ type: "error", text: "변경된 내용이 없습니다." });
+      addToast("error", "변경된 내용이 없습니다.");
       setSaving(false);
       return;
     }
 
-    const res = await fetch("/api/user", { method: "PATCH", body: fd });
+    const res  = await fetch("/api/user", { method: "PATCH", body: fd });
     const data = await res.json();
 
     setSaving(false);
+
     if (res.ok) {
       setProfile(data);
       setPhoto(null);
       setPreview(null);
-      setMessage({ type: "success", text: "저장됐습니다. 헤더 정보는 다음 로그인 시 반영됩니다." });
+      // 헤더 세션 즉시 반영
+      await update({ name: data.name ?? undefined, image: data.image ?? undefined });
+      addToast("success", "저장됐습니다!");
     } else {
-      setMessage({ type: "error", text: data.error ?? "저장에 실패했습니다." });
+      addToast("error", data.error ?? "저장에 실패했습니다.");
     }
   }
 
@@ -93,6 +107,15 @@ export default function MyPage() {
 
   return (
     <div className={styles.container}>
+      {/* ── 토스트 ── */}
+      <div className={styles.toastArea} aria-live="polite">
+        {toasts.map((t) => (
+          <div key={t.id} className={`${styles.toast} ${styles[t.type]}`}>
+            {t.type === "success" ? "✓ " : "✕ "}{t.text}
+          </div>
+        ))}
+      </div>
+
       <h1 className={styles.title}>마이페이지</h1>
 
       {/* 프로필 사진 */}
@@ -103,17 +126,9 @@ export default function MyPage() {
           aria-label="프로필 사진 변경"
         >
           {avatarSrc ? (
-            <Image
-              src={avatarSrc}
-              alt="프로필 사진"
-              width={80}
-              height={80}
-              className={styles.avatar}
-            />
+            <Image src={avatarSrc} alt="프로필 사진" width={80} height={80} className={styles.avatar} />
           ) : (
-            <span className={styles.avatarFallback}>
-              {profile.name?.[0] ?? "?"}
-            </span>
+            <span className={styles.avatarFallback}>{profile.name?.[0] ?? "?"}</span>
           )}
           <span className={styles.avatarOverlay}>변경</span>
         </button>
@@ -134,7 +149,6 @@ export default function MyPage() {
         )}
       </div>
 
-      {/* 로그인 수단 */}
       <p className={styles.provider}>
         {profile.provider === "kakao" ? "카카오" : profile.provider} 로그인
       </p>
@@ -170,23 +184,10 @@ export default function MyPage() {
         </div>
       </div>
 
-      {/* 메시지 */}
-      {message && (
-        <p className={`${styles.message} ${styles[message.type]}`}>
-          {message.text}
-        </p>
-      )}
-
-      {/* 저장 버튼 */}
-      <button
-        className={styles.saveBtn}
-        onClick={handleSave}
-        disabled={saving}
-      >
+      <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
         {saving ? "저장 중…" : "저장"}
       </button>
 
-      {/* 가입일 */}
       <p className={styles.joinedAt}>
         가입일 {new Date(profile.created_at).toLocaleDateString("ko-KR")}
       </p>
