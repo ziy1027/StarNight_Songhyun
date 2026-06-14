@@ -185,9 +185,16 @@
   color: var(--color-text-secondary);
 }
 
-.locationFallback {
-  color: var(--color-score-poor);
-  font-size: 0.65rem;
+.locationNotice {
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-2);
 }
 
 /* 하단 행: 점수 + 설명 */
