@@ -235,19 +235,25 @@ export async function getWeatherRange(
     forecast_days:  clampedForecast.toString(),
   });
 
+  const fetchUrl = `${BASE_URL}?${params}`;
+  console.log("[weather] getWeatherRange 요청:", fetchUrl);
+
   let res: Response;
   try {
-    res = await fetch(`${BASE_URL}?${params}`);
-  } catch {
+    res = await fetch(fetchUrl);
+  } catch (err) {
+    console.error("[weather] getWeatherRange 네트워크 오류:", err);
     return new Map();
   }
 
   if (!res.ok) {
-    console.error("[weather] getWeatherRange 실패:", res.status, `${BASE_URL}?${params}`);
+    console.error("[weather] getWeatherRange 실패:", res.status, fetchUrl);
     return new Map();
   }
 
   const data: OpenMeteoHourlyResponse = await res.json();
+  console.log("[weather] hourly 데이터 길이:", data.hourly?.time?.length ?? 0, "첫 시각:", data.hourly?.time?.[0], "마지막:", data.hourly?.time?.at(-1));
+
   const result = new Map<string, WeatherData>();
 
   // 날짜별로 20~23시 hourly 데이터 수집
@@ -263,6 +269,8 @@ export async function getWeatherRange(
     entry.cloud.push(data.hourly.cloud_cover[i] ?? 0);
     entry.codes.push(data.hourly.weather_code[i] ?? 0);
   });
+
+  console.log("[weather] byDate 날짜 수:", byDate.size, "키 예시:", [...byDate.keys()].slice(0, 3));
 
   byDate.forEach(({ cloud, codes }, date) => {
     if (cloud.length === 0) return;
