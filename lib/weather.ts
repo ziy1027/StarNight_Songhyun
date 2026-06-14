@@ -70,9 +70,20 @@ interface OpenMeteoHourlyResponse {
   hourly: {
     time: string[];
     cloud_cover: number[];
-    precipitation_probability: number[];
     weather_code: number[];
   };
+}
+
+/** WMO 날씨 코드로 강수 확률 추정 (과거 데이터는 precipitation_probability 미제공) */
+function estimatePrecipFromCode(code: number): number {
+  if (code >= 95) return 90;      // 뇌우
+  if (code >= 80) return 75;      // 소나기
+  if (code >= 71) return 65;      // 눈
+  if (code >= 61) return 70;      // 비
+  if (code >= 51) return 50;      // 이슬비
+  if (code >= 45) return 20;      // 안개
+  if (code === 3)  return 15;     // 흐림
+  return 0;
 }
 
 // ----------------------------------------------------------
@@ -200,14 +211,27 @@ export async function getWeatherRange(
   const clampedEnd = endDate > maxDateStr ? maxDateStr : endDate;
   if (startDate > maxDateStr) return new Map();
 
+  // past_days: 과거 날짜 포함 시 필요 (최대 92일 과거까지 지원)
+  const todayStr = today.toISOString().slice(0, 10);
+  const needPast = startDate < todayStr;
+
   const params = new URLSearchParams({
     latitude:   lat.toString(),
     longitude:  lng.toString(),
-    hourly:     "cloud_cover,precipitation_probability,weather_code",
+    hourly:     "cloud_cover,weather_code",   // precipitation_probability는 과거 날짜 미지원
     timezone:   "Asia/Seoul",
     start_date: startDate,
     end_date:   clampedEnd,
   });
+
+  if (needPast) {
+    // forecast 엔드포인트는 past_days로 과거 포함 가능 (start_date 대신)
+    const pastDays = Math.ceil(
+      (today.getTime() - new Date(startDate).getTime()) / 86_400_000
+    );
+    params.delete("start_date");
+    params.set("past_days", Math.min(pastDays, 92).toString());
+  }
 
   let res: Response;
   try {
@@ -224,28 +248,26 @@ export async function getWeatherRange(
   const data: OpenMeteoHourlyResponse = await res.json();
   const result = new Map<string, WeatherData>();
 
-  // 시간 배열을 날짜별로 그룹핑 후 20~23시만 추출
-  const byDate = new Map<string, { cloud: number[]; precip: number[]; codes: number[] }>();
+  // 날짜별로 20~23시 hourly 데이터 수집
+  const byDate = new Map<string, { cloud: number[]; codes: number[] }>();
 
   data.hourly.time.forEach((timeStr, i) => {
-    const date = timeStr.slice(0, 10);          // "2026-06-15"
-    const hour = parseInt(timeStr.slice(11, 13), 10); // 20, 21, 22, 23
+    const date = timeStr.slice(0, 10);
+    const hour = parseInt(timeStr.slice(11, 13), 10);
+    if (hour < 20) return;
 
-    if (hour < 20) return; // 20시 이전은 무시
-
-    if (!byDate.has(date)) byDate.set(date, { cloud: [], precip: [], codes: [] });
+    if (!byDate.has(date)) byDate.set(date, { cloud: [], codes: [] });
     const entry = byDate.get(date)!;
     entry.cloud.push(data.hourly.cloud_cover[i] ?? 0);
-    entry.precip.push(data.hourly.precipitation_probability[i] ?? 0);
     entry.codes.push(data.hourly.weather_code[i] ?? 0);
   });
 
-  byDate.forEach(({ cloud, precip, codes }, date) => {
+  byDate.forEach(({ cloud, codes }, date) => {
     if (cloud.length === 0) return;
     const avg = (arr: number[]) => Math.round(arr.reduce((s, v) => s + v, 0) / arr.length);
-    const cloudCover = avg(cloud);
-    const precipProb = Math.max(...precip);
-    const weatherCode = codes[Math.floor(codes.length / 2)] ?? codes[0]; // 중간 시점 코드
+    const cloudCover  = avg(cloud);
+    const weatherCode = codes[Math.floor(codes.length / 2)] ?? codes[0];
+    const precipProb  = Math.max(...codes.map(estimatePrecipFromCode));
 
     result.set(date, {
       cloudCover,

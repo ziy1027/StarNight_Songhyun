@@ -7,15 +7,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { createServerClient } from "@/lib/supabase";
 
-async function getAuthUserId(): Promise<string | null> {
-  const session = await auth();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (session?.user as any)?.id ?? null;
-}
-
 // ── GET /api/user ─────────────────────────────────────────
 export async function GET() {
-  const userId = await getAuthUserId();
+  const session = await auth();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const userId = (session?.user as any)?.id ?? null;
   if (!userId) return NextResponse.json({ error: "로그인이 필요합니다" }, { status: 401 });
 
   const supabase = createServerClient();
@@ -25,14 +21,33 @@ export async function GET() {
     .eq("id", userId)
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  // users 테이블에 행이 없으면 세션 정보로 생성
+  if (error || !data) {
+    const { data: inserted, error: insertErr } = await supabase
+      .from("users")
+      .upsert({
+        id:       userId,
+        name:     session?.user?.name ?? null,
+        image:    session?.user?.image ?? null,
+        email:    session?.user?.email ?? null,
+        provider: "kakao",
+      }, { onConflict: "id" })
+      .select("id, email, name, image, provider, created_at")
+      .single();
+
+    if (insertErr) return NextResponse.json({ error: insertErr.message }, { status: 500 });
+    return NextResponse.json(inserted);
+  }
+
   return NextResponse.json(data);
 }
 
 // ── PATCH /api/user ───────────────────────────────────────
 // Body: FormData { name?, email?, photo? }
 export async function PATCH(request: NextRequest) {
-  const userId = await getAuthUserId();
+  const session2 = await auth();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const userId = (session2?.user as any)?.id ?? null;
   if (!userId) return NextResponse.json({ error: "로그인이 필요합니다" }, { status: 401 });
 
   const formData = await request.formData();
@@ -70,10 +85,13 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "변경할 내용이 없습니다" }, { status: 400 });
   }
 
+  // upsert: users 행이 없는 경우(DB 재생성 등)도 안전하게 처리
   const { data, error } = await supabase
     .from("users")
-    .update(updates)
-    .eq("id", userId)
+    .upsert(
+      { id: userId, ...updates },
+      { onConflict: "id" }
+    )
     .select("id, email, name, image, provider, created_at")
     .single();
 
