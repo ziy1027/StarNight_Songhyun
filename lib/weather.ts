@@ -66,11 +66,11 @@ interface OpenMeteoCurrentResponse {
   };
 }
 
-interface OpenMeteoDailyResponse {
-  daily: {
+interface OpenMeteoHourlyResponse {
+  hourly: {
     time: string[];
-    cloud_cover_mean: number[];
-    precipitation_probability_max: number[];
+    cloud_cover: number[];
+    precipitation_probability: number[];
     weather_code: number[];
   };
 }
@@ -180,32 +180,34 @@ export async function getNationwideClearSpots(): Promise<Location[]> {
  * @param endDate   - 종료 날짜 (YYYY-MM-DD)
  * @returns date(YYYY-MM-DD) → WeatherData 맵
  */
+/**
+ * 특정 월의 날씨 예보를 날짜 범위로 가져온다.
+ * 별 관측 시간대인 저녁 20~23시 hourly 데이터를 사용해
+ * 일별 일간 평균(all-day mean) 대신 밤하늘 조건을 정확하게 반영한다.
+ */
 export async function getWeatherRange(
   lat: number,
   lng: number,
   startDate: string,
   endDate: string
 ): Promise<Map<string, WeatherData>> {
-  const params = new URLSearchParams({
-    latitude:   lat.toString(),
-    longitude:  lng.toString(),
-    daily:      "cloud_cover_mean,precipitation_probability_max,weather_code",
-    timezone:   "Asia/Seoul",
-    start_date: startDate,
-    end_date:   endDate,
-  });
-
   // Open-Meteo forecast API는 최대 16일 앞까지만 지원
-  // end_date가 범위 초과면 오늘+16일로 자름
   const today = new Date();
   const maxDate = new Date(today);
   maxDate.setDate(today.getDate() + 16);
   const maxDateStr = maxDate.toISOString().slice(0, 10);
-  if (endDate > maxDateStr) {
-    params.set("end_date", maxDateStr);
-  }
-  // start_date가 오늘보다 미래면 날씨 없음
+
+  const clampedEnd = endDate > maxDateStr ? maxDateStr : endDate;
   if (startDate > maxDateStr) return new Map();
+
+  const params = new URLSearchParams({
+    latitude:   lat.toString(),
+    longitude:  lng.toString(),
+    hourly:     "cloud_cover,precipitation_probability,weather_code",
+    timezone:   "Asia/Seoul",
+    start_date: startDate,
+    end_date:   clampedEnd,
+  });
 
   let res: Response;
   try {
@@ -219,15 +221,37 @@ export async function getWeatherRange(
     return new Map();
   }
 
-  const data: OpenMeteoDailyResponse = await res.json();
+  const data: OpenMeteoHourlyResponse = await res.json();
   const result = new Map<string, WeatherData>();
 
-  data.daily.time.forEach((date, i) => {
+  // 시간 배열을 날짜별로 그룹핑 후 20~23시만 추출
+  const byDate = new Map<string, { cloud: number[]; precip: number[]; codes: number[] }>();
+
+  data.hourly.time.forEach((timeStr, i) => {
+    const date = timeStr.slice(0, 10);          // "2026-06-15"
+    const hour = parseInt(timeStr.slice(11, 13), 10); // 20, 21, 22, 23
+
+    if (hour < 20) return; // 20시 이전은 무시
+
+    if (!byDate.has(date)) byDate.set(date, { cloud: [], precip: [], codes: [] });
+    const entry = byDate.get(date)!;
+    entry.cloud.push(data.hourly.cloud_cover[i] ?? 0);
+    entry.precip.push(data.hourly.precipitation_probability[i] ?? 0);
+    entry.codes.push(data.hourly.weather_code[i] ?? 0);
+  });
+
+  byDate.forEach(({ cloud, precip, codes }, date) => {
+    if (cloud.length === 0) return;
+    const avg = (arr: number[]) => Math.round(arr.reduce((s, v) => s + v, 0) / arr.length);
+    const cloudCover = avg(cloud);
+    const precipProb = Math.max(...precip);
+    const weatherCode = codes[Math.floor(codes.length / 2)] ?? codes[0]; // 중간 시점 코드
+
     result.set(date, {
-      cloudCover:              data.daily.cloud_cover_mean[i] ?? 0,
-      precipitationProbability: data.daily.precipitation_probability_max[i] ?? 0,
-      weatherCode:             data.daily.weather_code[i] ?? 0,
-      description:             wmoToKo(data.daily.weather_code[i] ?? 0),
+      cloudCover,
+      precipitationProbability: precipProb,
+      weatherCode,
+      description: wmoToKo(weatherCode),
     });
   });
 
