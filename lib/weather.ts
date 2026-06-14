@@ -253,14 +253,22 @@ export async function getWeatherRange(
   const todayMs     = (() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); })();
   const startMs     = parseDateMs(startDate);
   const endMs       = parseDateMs(endDate);
-  // archive 데이터는 오늘 기준 ARCHIVE_LAG_DAYS일 전까지 이용 가능
-  const archiveCutMs = todayMs - ARCHIVE_LAG_DAYS * 86_400_000;
 
+  // 범위가 아예 미래 16일 밖이면 데이터 없음
   if (startMs > todayMs + 16 * 86_400_000) return new Map();
 
   const common = `latitude=${lat}&longitude=${lng}&hourly=cloud_cover,weather_code&timezone=Asia%2FSeoul`;
 
-  // Archive 구간: startDate ~ min(endDate, archiveCut - 1일)
+  // ── Forecast: 전체 과거~미래 범위를 항상 커버 (past_days 최대 92일)
+  //    → 틈(gap) 없이 모든 날짜를 채운다. Archive가 있으면 나중에 덮어씀.
+  const pastDays     = Math.min(Math.max(0, Math.ceil((todayMs - startMs) / 86_400_000)), 92);
+  const forecastDays = Math.min(Math.max(1, Math.ceil((endMs - todayMs) / 86_400_000) + 1), 16);
+  const forecastPromise = fetchHourlyNight(
+    `${BASE_URL}?${common}&past_days=${pastDays}&forecast_days=${forecastDays}`
+  );
+
+  // ── Archive: 3일 이전 과거만 ERA5 실측값으로 보강 (forecast보다 정확)
+  const archiveCutMs = todayMs - ARCHIVE_LAG_DAYS * 86_400_000;
   const archivePromise: Promise<Map<string, WeatherData>> =
     startMs < archiveCutMs
       ? fetchHourlyNight(
@@ -268,20 +276,9 @@ export async function getWeatherRange(
         )
       : Promise.resolve(new Map());
 
-  // Forecast 구간: max(startDate, archiveCut) ~ endDate
-  const forecastPromise: Promise<Map<string, WeatherData>> =
-    endMs >= archiveCutMs
-      ? (() => {
-          const fStartMs = Math.max(startMs, archiveCutMs);
-          const pastDays     = Math.min(Math.max(0, Math.ceil((todayMs - fStartMs) / 86_400_000)), 92);
-          const forecastDays = Math.min(Math.max(1, Math.ceil((endMs - todayMs) / 86_400_000) + 1), 16);
-          return fetchHourlyNight(`${BASE_URL}?${common}&past_days=${pastDays}&forecast_days=${forecastDays}`);
-        })()
-      : Promise.resolve(new Map());
+  const [forecastMap, archiveMap] = await Promise.all([forecastPromise, archivePromise]);
 
-  const [archiveMap, forecastMap] = await Promise.all([archivePromise, forecastPromise]);
-
-  // 병합: archive(실측) 우선, 없는 날짜는 forecast로 보완
+  // 병합: forecast로 전체를 채우고, archive(실측)가 있으면 덮어쓴다
   const result = new Map<string, WeatherData>(forecastMap);
   archiveMap.forEach((v, k) => result.set(k, v));
   return result;

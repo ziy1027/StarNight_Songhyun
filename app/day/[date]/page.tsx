@@ -16,9 +16,20 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import styles from "./page.module.css";
-import { getMoonPhase, getMoonEmoji, getStarScore, isBestDay, combineStarScore } from "@/lib/moonPhase";
+import {
+  getMoonPhase,
+  getMoonEmoji,
+  getStarScore,
+  isBestDay,
+  combineStarScore,
+} from "@/lib/moonPhase";
 import { getLunarDate } from "@/lib/lunar";
-import { getWeatherByCoords, getWeatherRange, getWeatherScore, DEFAULT_COORDS } from "@/lib/weather";
+import {
+  getWeatherByCoords,
+  getWeatherRange,
+  getWeatherScore,
+  DEFAULT_COORDS,
+} from "@/lib/weather";
 import type { StarScore, WeatherData } from "@/types";
 
 // ----------------------------------------------------------
@@ -26,16 +37,25 @@ import type { StarScore, WeatherData } from "@/types";
 // ----------------------------------------------------------
 
 /** YYYY-MM-DD 파라미터를 파싱해 { year, month, day } 반환. 유효하지 않으면 null. */
-function parseDateParam(s: string): { year: number; month: number; day: number } | null {
+function parseDateParam(
+  s: string,
+): { year: number; month: number; day: number } | null {
   const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!m) return null;
 
-  const year = +m[1], month = +m[2], day = +m[3];
+  const year = +m[1],
+    month = +m[2],
+    day = +m[3];
   if (month < 1 || month > 12 || day < 1 || day > 31) return null;
 
   // 실제 날짜 존재 여부 (예: 2025-02-30 차단)
   const d = new Date(year, month - 1, day);
-  if (d.getFullYear() !== year || d.getMonth() + 1 !== month || d.getDate() !== day) return null;
+  if (
+    d.getFullYear() !== year ||
+    d.getMonth() + 1 !== month ||
+    d.getDate() !== day
+  )
+    return null;
 
   return { year, month, day };
 }
@@ -61,10 +81,10 @@ function toGradeKo(s: number): string {
 function gradeColor(grade: StarScore["grade"]): string {
   const map: Record<StarScore["grade"], string> = {
     excellent: "var(--color-score-excellent)",
-    good:      "var(--color-score-good)",
-    fair:      "var(--color-score-fair)",
-    poor:      "var(--color-score-poor)",
-    bad:       "var(--color-score-bad)",
+    good: "var(--color-score-good)",
+    fair: "var(--color-score-fair)",
+    poor: "var(--color-score-poor)",
+    bad: "var(--color-score-bad)",
   };
   return map[grade];
 }
@@ -76,16 +96,21 @@ interface PageProps {
   params: Promise<{ date: string }>;
 }
 
+// 날씨는 매 요청마다 현재 날짜 기준으로 다시 계산해야 하므로 정적 캐시 비활성화
+export const dynamic = "force-dynamic";
+
 // ----------------------------------------------------------
 // 메타데이터
 // ----------------------------------------------------------
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { date } = await params;
   const parsed = parseDateParam(date);
   if (!parsed) return { title: "잘못된 날짜" };
 
   const { year, month, day } = parsed;
-  const moon  = getMoonEmoji(getMoonPhase(new Date(year, month - 1, day)));
+  const moon = getMoonEmoji(getMoonPhase(new Date(year, month - 1, day)));
   const lunar = getLunarDate(new Date(year, month - 1, day));
 
   return {
@@ -106,10 +131,10 @@ export default async function DayDetailPage({ params }: PageProps) {
   const dateObj = new Date(year, month - 1, day);
 
   // 달 위상 계산
-  const phaseVal  = getMoonPhase(dateObj);
-  const moon      = getMoonEmoji(phaseVal);
-  const lunar     = getLunarDate(dateObj);
-  const best      = isBestDay(phaseVal);
+  const phaseVal = getMoonPhase(dateObj);
+  const moon = getMoonEmoji(phaseVal);
+  const lunar = getLunarDate(dateObj);
+  const best = isBestDay(phaseVal);
   const moonScore = Math.round(getStarScore(phaseVal) / 2); // 0~50
 
   // 오늘 여부 판별 (실시간 날씨 or 예보 분기)
@@ -126,14 +151,17 @@ export default async function DayDetailPage({ params }: PageProps) {
 
   if (isToday) {
     // 실시간 날씨
-    weather = await getWeatherByCoords(DEFAULT_COORDS.latitude, DEFAULT_COORDS.longitude);
+    weather = await getWeatherByCoords(
+      DEFAULT_COORDS.latitude,
+      DEFAULT_COORDS.longitude,
+    );
   } else {
     // 예보 (Open-Meteo는 16일 이내만 지원)
     const wMap = await getWeatherRange(
       DEFAULT_COORDS.latitude,
       DEFAULT_COORDS.longitude,
       date,
-      date
+      date,
     );
     weather = wMap.get(date) ?? null;
   }
@@ -158,15 +186,16 @@ export default async function DayDetailPage({ params }: PageProps) {
   // 이전/다음 날 계산
   const fmt = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  const prevDate = new Date(dateObj); prevDate.setDate(prevDate.getDate() - 1);
-  const nextDate = new Date(dateObj); nextDate.setDate(nextDate.getDate() + 1);
+  const prevDate = new Date(dateObj);
+  prevDate.setDate(prevDate.getDate() - 1);
+  const nextDate = new Date(dateObj);
+  nextDate.setDate(nextDate.getDate() + 1);
 
   // 전월 링크
   const backMonth = `/?month=${year}-${String(month).padStart(2, "0")}`;
 
   return (
     <article className={styles.page} aria-labelledby="date-heading">
-
       {/* 뒤로가기 */}
       <Link href={backMonth} className={styles.back}>
         ← 달력으로
@@ -174,6 +203,16 @@ export default async function DayDetailPage({ params }: PageProps) {
 
       {/* 달 위상 헤더 카드 */}
       <div className={styles.heroCard}>
+        {/* 이전/다음날 네비게이션 */}
+        <div className={styles.heroNav}>
+          <Link href={`/day/${fmt(prevDate)}`} className={styles.heroNavBtn}>
+            ‹ {prevDate.getMonth() + 1}월 {prevDate.getDate()}일
+          </Link>
+          <Link href={`/day/${fmt(nextDate)}`} className={styles.heroNavBtn}>
+            {nextDate.getMonth() + 1}월 {nextDate.getDate()}일 ›
+          </Link>
+        </div>
+
         <Image
           src={`/moon-phase/${Math.min(lunar.day, 29)}.png`}
           alt={moon.nameKo}
@@ -190,19 +229,7 @@ export default async function DayDetailPage({ params }: PageProps) {
         <p className={styles.lunarDate}>{lunar.str}</p>
         <p className={styles.phaseName}>{moon.nameKo}</p>
 
-        {best && (
-          <p className={styles.bestBadge}>⭐ 별보기 최적일</p>
-        )}
-
-        {/* 이전/다음날 네비게이션 */}
-        <div className={styles.heroNav}>
-          <Link href={`/day/${fmt(prevDate)}`} className={styles.heroNavBtn}>
-            ‹ {prevDate.getMonth() + 1}월 {prevDate.getDate()}일
-          </Link>
-          <Link href={`/day/${fmt(nextDate)}`} className={styles.heroNavBtn}>
-            {nextDate.getMonth() + 1}월 {nextDate.getDate()}일 ›
-          </Link>
-        </div>
+        {best && <p className={styles.bestBadge}>⭐ 별보기 최적일</p>}
       </div>
 
       {/* 별 관측 지수 카드 */}
@@ -231,11 +258,13 @@ export default async function DayDetailPage({ params }: PageProps) {
             </div>
 
             {/* 게이지 바 */}
-            <div className={styles.bar}
-                 role="progressbar"
-                 aria-valuenow={starScore.score}
-                 aria-valuemin={0}
-                 aria-valuemax={100}>
+            <div
+              className={styles.bar}
+              role="progressbar"
+              aria-valuenow={starScore.score}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
               <div
                 className={styles.barFill}
                 style={{
@@ -249,11 +278,15 @@ export default async function DayDetailPage({ params }: PageProps) {
             <dl className={styles.breakdown}>
               <div className={styles.breakdownRow}>
                 <dt>🌙 달 위상 점수</dt>
-                <dd className={styles.breakdownVal}>{starScore.breakdown.moonScore} / 50</dd>
+                <dd className={styles.breakdownVal}>
+                  {starScore.breakdown.moonScore} / 50
+                </dd>
               </div>
               <div className={styles.breakdownRow}>
                 <dt>☁️ 날씨 점수</dt>
-                <dd className={styles.breakdownVal}>{starScore.breakdown.weatherScore} / 50</dd>
+                <dd className={styles.breakdownVal}>
+                  {starScore.breakdown.weatherScore} / 50
+                </dd>
               </div>
             </dl>
           </>
@@ -275,7 +308,10 @@ export default async function DayDetailPage({ params }: PageProps) {
         <div className={styles.infoGrid}>
           <div className={styles.infoItem}>
             <span className={styles.infoLabel}>위상 이름</span>
-            <span className={styles.infoVal} style={{ fontFamily: "var(--font-sans-kr)", fontSize: "1rem" }}>
+            <span
+              className={styles.infoVal}
+              style={{ fontFamily: "var(--font-sans-kr)", fontSize: "1rem" }}
+            >
               {moon.nameKo}
             </span>
           </div>
@@ -285,13 +321,19 @@ export default async function DayDetailPage({ params }: PageProps) {
           </div>
           <div className={styles.infoItem}>
             <span className={styles.infoLabel}>음력</span>
-            <span className={styles.infoVal} style={{ fontFamily: "var(--font-sans-kr)", fontSize: "0.9rem" }}>
+            <span
+              className={styles.infoVal}
+              style={{ fontFamily: "var(--font-sans-kr)", fontSize: "0.9rem" }}
+            >
               {lunar.str}
             </span>
           </div>
           <div className={styles.infoItem}>
             <span className={styles.infoLabel}>관측 최적일</span>
-            <span className={styles.infoVal} style={{ fontFamily: "var(--font-sans-kr)", fontSize: "1rem" }}>
+            <span
+              className={styles.infoVal}
+              style={{ fontFamily: "var(--font-sans-kr)", fontSize: "1rem" }}
+            >
               {best ? "✅ 최적" : "❌ 비최적"}
             </span>
           </div>
@@ -303,14 +345,26 @@ export default async function DayDetailPage({ params }: PageProps) {
         <h2 className={styles.cardTitle}>
           <span aria-hidden="true">☁️</span>
           날씨 정보
-          {isToday && <span style={{ color: "var(--color-accent-star)", marginLeft: "0.5rem" }}>실시간</span>}
+          {isToday && (
+            <span
+              style={{
+                color: "var(--color-accent-star)",
+                marginLeft: "0.5rem",
+              }}
+            >
+              실시간
+            </span>
+          )}
         </h2>
 
         {weather ? (
           <div className={styles.infoGrid}>
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>날씨</span>
-              <span className={styles.infoVal} style={{ fontFamily: "var(--font-sans-kr)", fontSize: "1rem" }}>
+              <span
+                className={styles.infoVal}
+                style={{ fontFamily: "var(--font-sans-kr)", fontSize: "1rem" }}
+              >
                 {weather.description}
               </span>
             </div>
@@ -321,7 +375,9 @@ export default async function DayDetailPage({ params }: PageProps) {
             {weather.precipitationProbability > 0 && (
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>강수 확률</span>
-                <span className={styles.infoVal}>{weather.precipitationProbability}%</span>
+                <span className={styles.infoVal}>
+                  {weather.precipitationProbability}%
+                </span>
               </div>
             )}
           </div>
@@ -329,7 +385,6 @@ export default async function DayDetailPage({ params }: PageProps) {
           <p className={styles.noData}>이 날짜의 날씨 데이터가 없습니다.</p>
         )}
       </div>
-
     </article>
   );
 }
